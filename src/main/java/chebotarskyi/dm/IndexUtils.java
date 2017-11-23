@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 
 public class IndexUtils {
 
-    public static final String INDEX_PATH = "/home/dima/index_task7.lucene";
+    public static final String INDEX_PATH = "/home/dima/index_task7_tree.lucene";
     private final Supplier<IndexWriter> w;
 
     IndexUtils() {

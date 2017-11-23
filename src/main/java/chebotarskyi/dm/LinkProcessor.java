@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 public class LinkProcessor {
@@ -28,7 +28,7 @@ public class LinkProcessor {
 
         long startTime = System.currentTimeMillis();
 
-        Set<String> links = new HashSet<>();
+        Set<String> links = new TreeSet<>();
 
         Set<String> innerLinks = process(rootURL);
 
@@ -38,7 +38,7 @@ public class LinkProcessor {
                 //TODO: Figure out what to do with null
             }
 
-            Set<String> linksToProcess = new HashSet<>(innerLinks);
+            Set<String> linksToProcess = new TreeSet<>(innerLinks);
 
             linksToProcess.removeAll(links);
 
@@ -82,7 +82,7 @@ public class LinkProcessor {
                 index(link, body);
 
                 Set<String> innerLinks = getLinksFrom(body);
-                Set<String> links = new HashSet<>();
+                Set<String> links = new TreeSet<>();
                 for (String l : innerLinks) {
                     if (l.contains(".pdf") || l.contains(".mp4") || l.contains(".mpeg4"))
                         continue;
@@ -136,7 +136,7 @@ public class LinkProcessor {
     }
 
     private Set<String> getLinksFrom(Element element) {
-        Set<String> links = new HashSet<>();
+        Set<String> links = new TreeSet<>();
 
         Elements elements = element.getElementsByAttribute("href");
         for (Element e : elements) {

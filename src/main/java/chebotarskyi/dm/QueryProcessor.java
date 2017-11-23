@@ -35,61 +35,66 @@ public class QueryProcessor {
         }
     }
 
-    public void startQueryProcessor() {
-
-        while (true) {
-
-            String querystr = askForQuery();
-            if (querystr.equals("-1")) {
-                System.out.println("Bye!");
-                break;
-            }
-            Query q = null;
-            try {
-                q = new QueryParser("body", analyzer).parse(querystr);
-                processQuery(q);
-            } catch (Exception e) {
-                System.out.println("Wrong query!");
-                System.out.println(e.getMessage());
-            }
-        }
-    }
-
-    private String askForQuery() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("\n\nPlease enter query to search: ");
-        String title = scanner.nextLine();
-        return title;
-    }
-
-    private void processQuery(Query q) throws IOException {
+    public String processQuery(String querystr) throws ParseException {
         int hitsPerPage = 5;
-        IndexReader reader = DirectoryReader.open(index);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        TopDocs docs = searcher.search(q, hitsPerPage);
-        ScoreDoc[] hits = docs.scoreDocs;
+
+        Query q = new QueryParser("body", analyzer).parse(querystr);
 
 
-        System.out.println("Found " + hits.length + " hits.");
-        for (int i = 0; i < hits.length; ++i) {
-            int docId = hits[i].doc;
-            Document d = searcher.doc(docId);
+        StringBuilder builder = new StringBuilder();
 
-            System.out.println((i + 1) + ". " + d.get("url") + "\n");
-        }
+        try {
+            IndexReader reader = DirectoryReader.open(index);
+            IndexSearcher searcher = new IndexSearcher(reader);
+            TopDocs docs = searcher.search(q, hitsPerPage);
+            ScoreDoc[] hits = docs.scoreDocs;
 
-        MoreLikeThis mlt = new MoreLikeThis(reader);
-        mlt.setFieldNames(new String[] {"url", "body"});
-        mlt.setAnalyzer(analyzer);
+            builder.append("Found ");
+            builder.append(hits.length);
+            builder.append(" hits.\n");
 
-        if (hits.length > 0) {
-            TopDocs topDocs = searcher.search(mlt.like(hits[0].doc), 5);
-            for (int i = 0; i < topDocs.totalHits && i < 5; ++i) {
-                int docId = topDocs.scoreDocs[i].doc;
+            for (int i = 0; i < hits.length; ++i) {
+                int docId = hits[i].doc;
                 Document d = searcher.doc(docId);
 
-                System.out.println("Like this: " + (i + 1) + ". " + d.get("url") + "\n");
+                builder.append((i + 1));
+                builder.append(". ");
+                builder.append(d.get("url"));
+                builder.append("\n");
             }
+
+            MoreLikeThis mlt = new MoreLikeThis(reader);
+            mlt.setFieldNames(new String[] {"url", "body"});
+            mlt.setAnalyzer(analyzer);
+
+            if (hits.length > 0) {
+                TopDocs topDocs = searcher.search(mlt.like(hits[0].doc), 5);
+                for (int i = 0; i < topDocs.totalHits && i < 5; ++i) {
+                    int docId = topDocs.scoreDocs[i].doc;
+                    Document d = searcher.doc(docId);
+
+
+                    builder.append("Like this: ");
+                    builder.append((i + 1));
+                    builder.append(". ");
+                    builder.append(d.get("url"));
+                    builder.append("\n");
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Cannot create reader!");
+            return "Cannot create reader!";
+        }
+
+        return builder.toString();
+    }
+
+    public void closeIndex(){
+        try {
+            index.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
